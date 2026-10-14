@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear usuario - StudyMatch</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        .logo { text-align: center; margin-bottom: 25px; }
+        .logo h1 { color: #667eea; font-size: 2rem; }
+        .logo p { color: #666; margin-top: 5px; font-size: 0.9rem; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 6px; 
+            color: #333; 
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group input, .form-group select { 
+            width: 100%; 
+            padding: 11px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .info-text {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .btn-registrar {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        .btn-registrar:hover { transform: translateY(-2px); }
+        .error-msg {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid #dc2626;
+        }
+        .success-box {
+            background: #dcfce7;
+            color: #166534;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #10b981;
+        }
+        .success-box h3 { margin-bottom: 10px; color: #166534; }
+        .success-box .badge {
+            display: inline-block;
+            background: #166534;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 5px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .login-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>📚 StudyMatch</h1>
+            <p>Crear usuario nuevo</p>
+        </div>
+        
+        {% if error %}
+        <div class="error-msg">⚠️ {{ error }}</div>
+        {% endif %}
+        
+        {% if nuevo_id %}
+        <!-- Mensaje de éxito -->
+        <div class="success-box">
+            <h3>✅ ¡Usuario creado exitosamente!</h3>
+            <p><strong>{{ nuevo_nombre }}</strong> ha sido registrado con el correo <strong>{{ nuevo_email }}</strong></p>
+            <p style="margin-top: 15px;">Usuario ID: <span class="badge">{{ nuevo_id }}</span></p>
+            <p style="margin-top: 10px;">Carrera: <span class="badge">{{ carrera }}</span></p>
+            <p style="margin-top: 15px; font-size: 0.9rem;">
+                Ahora puedes iniciar sesión e inscribirte en las materias de tu carrera desde el portal.
+            </p>
+            <p style="margin-top: 20px;">
+                <a href="/login" style="color: #166534; font-weight: 600;">→ Ir al login</a>
+            </p>
+        </div>
+        {% else %}
+        <!-- Formulario de registro (solo 4 campos) -->
+        <form method="post" action="/registro">
+            <div class="form-group">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Ej: María López">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Correo institucional</label>
+                <input type="email" id="email" name="email" required placeholder="ej: maria@uni.edu">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required placeholder="Mínimo 4 caracteres">
+            </div>
+            
+            <div class="form-group">
+                <label for="carrera">Carrera</label>
+                <select id="carrera" name="carrera" required>
+                    {% for c in todas_carreras %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+                <p class="info-text">Solo podrás inscribir materias de esta carrera.</p>
+            </div>
+            
+            <button type="submit" class="btn-registrar">📝 Registrar usuario</button>
+        </form>
+        {% endif %}
+        
+        <div class="login-link">
+            <p>¿Ya tienes cuenta? <a href="/login">Volver al login</a></p>
+        </div>
+    </div>
+</body>
+</html>

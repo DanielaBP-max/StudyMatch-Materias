@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if usuario.rol == 'admin' %}
+<!-- ================= VISTA ADMINISTRADOR ================= -->
+<h1>Gestión de Estudiantes</h1>
+<p style="font-size: 1.1rem; margin-bottom: 20px;">
+    {{ usuario.nombre }} <span class="badge badge-warning">Administrador</span>
+</p>
+
+{% if msg %}<div class="msg {{ 'ok' if ok else 'err' }}">{{ msg }}</div>{% endif %}
+
+<!-- Selector de estudiante -->
+<div class="card">
+    <h2>Seleccionar Estudiante</h2>
+    <form method="get" action="/perfil" style="display: flex; gap: 15px; align-items: end;">
+        <div style="flex: 1;">
+            <label for="estudiante_id">Estudiante</label>
+            <select name="estudiante_id" id="estudiante_id" required style="width: 100%;" onchange="this.form.submit()">
+                <option value="">-- Selecciona un estudiante --</option>
+                {% for e in estudiantes_info %}
+                <option value="{{ e.usuario_id }}" {{ 'selected' if estudiante_seleccionado and estudiante_seleccionado.usuario_id == e.usuario_id }}>
+                    {{ e.nombre }} (ID: {{ e.usuario_id }}) - {{ e.carrera }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+{% if estudiante_seleccionado %}
+
+<!-- FORMULARIO PARA INSCRIBIR MATERIA -->
+<div class="card" style="border-left: 5px solid #667eea; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);">
+    <h2> Inscribir Materia a {{ estudiante_seleccionado.nombre }}</h2>
+    <p style="color: #64748b; margin-bottom: 15px;">
+        Carrera del estudiante: <strong>{{ estudiante_seleccionado.carrera }}</strong>
+    </p>
+    <form method="post" action="/web/inscripcion">
+        <input type="hidden" name="usuario_destino" value="{{ estudiante_seleccionado.usuario_id }}">
+        
+        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: end;">
+            <div>
+                <label for="periodo">Periodo</label>
+                <select name="periodo" id="periodo" required style="width: 100%;">
+                    {% for p in todos_los_periodos %}
+                        <option value="{{ p }}" {{ 'selected' if p == periodo_activo }}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="grupo_id">Seleccionar Grupo (solo materias de {{ estudiante_seleccionado.carrera }})</label>
+                <select name="grupo_id" id="grupo_id" required style="width: 100%;">
+                    <option value="">-- Selecciona un grupo --</option>
+                    {% for m in catalogo_materias %}
+                        {% if m.carrera == estudiante_seleccionado.carrera %}
+                            <option value="{{ m.grupo_id }}">
+                                G{{ m.grupo_id }} — {{ m.nombre }} ({{ m.dia }} {{ m.hora }} - {{ m.salon }})
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <button type="submit" class="btn-success" style="width: 100%; padding: 10px;">Inscribir Materia</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Formulario de actualización de datos -->
+<div class="card" style="border-left: 5px solid #10b981;">
+    <h2>Actualizar Datos del Estudiante</h2>
+    <p style="color: #64748b; margin-bottom: 20px;">
+        Editando a: <strong>{{ estudiante_seleccionado.nombre }}</strong> 
+        <span class="badge badge-primary">ID: {{ estudiante_seleccionado.usuario_id }}</span>
+    </p>
+    <form method="post" action="/admin/actualizar_estudiante">
+        <input type="hidden" name="usuario_id" value="{{ estudiante_seleccionado.usuario_id }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Nombre</label>
+                <input type="text" name="nombre" value="{{ estudiante_seleccionado.nombre }}" required>
+            </div>
+            <div>
+                <label>Email</label>
+                <input type="email" name="email" value="{{ estudiante_seleccionado.email }}" required>
+            </div>
+            <div>
+                <label>Carrera</label>
+                <select name="carrera" required>
+                    <option value="Ingeniería de Sistemas" {{ 'selected' if estudiante_seleccionado.carrera == 'Ingeniería de Sistemas' }}>Ingeniería de Sistemas</option>
+                    <option value="Medicina" {{ 'selected' if estudiante_seleccionado.carrera == 'Medicina' }}>Medicina</option>
+                    <option value="Administración de Empresas" {{ 'selected' if estudiante_seleccionado.carrera == 'Administración de Empresas' }}>Administración de Empresas</option>
+                    <option value="Ingeniería Mecánica" {{ 'selected' if estudiante_seleccionado.carrera == 'Ingeniería Mecánica' }}>Ingeniería Mecánica</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn-success" style="margin-top: 15px;">Guardar Cambios</button>
+    </form>
+</div>
+
+<!-- Tabla de materias inscritas -->
+<div class="card">
+    <h2>Materias Inscritas</h2>
+    {% if materias_estudiante %}
+    <table>
+        <thead>
+            <tr>
+                <th>Grupo</th>
+                <th>ID Mat.</th>
+                <th>Materia</th>
+                <th>Día</th>
+                <th>Hora</th>
+                <th>Salón</th>
+                <th>Periodo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in materias_estudiante %}
+            <tr>
+                <td><span class="badge badge-primary">G{{ m.grupo_id }}</span></td>
+                <td>{{ m.materia_id }}</td>
+                <td>{{ m.nombre }}</td>
+                <td>{{ m.dia }}</td>
+                <td>{{ m.hora }}</td>
+                <td>{{ m.salon }}</td>
+                <td><span class="badge badge-success">{{ m.periodo }}</span></td>
+                <td>
+                    <button onclick="abrirModalActualizar('{{ m.grupo_id }}', '{{ m.periodo }}', '{{ m.dia }}', '{{ m.hora }}', '{{ m.salon }}')" 
+                            class="btn-warning" style="padding:5px 10px; font-size:0.8rem;"></button>
+                    <form method="post" action="/admin/eliminar_inscripcion" style="display:inline;">
+                        <input type="hidden" name="usuario_id" value="{{ estudiante_seleccionado.usuario_id }}">
+                        <input type="hidden" name="materia_id" value="{{ m.grupo_id }}">
+                        <button type="submit" class="btn-danger" style="padding:5px 10px; font-size:0.8rem;" 
+                                onclick="return confirm('¿Eliminar inscripción?');"></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #64748b; text-align: center; padding: 20px;">Este estudiante no tiene materias inscritas.</p>
+    {% endif %}
+</div>
+
+<!-- Zona de peligro: Eliminar estudiante -->
+<div class="card" style="border-left: 5px solid #dc2626; background: #fef2f2;">
+    <h2 style="color: #dc2626;">Zona de Peligro - Eliminar Estudiante</h2>
+    <p style="color: #7f1d1d; margin-bottom: 15px;">
+        ️ Esta acción eliminará al estudiante <strong>{{ estudiante_seleccionado.nombre }}</strong> 
+        (ID: {{ estudiante_seleccionado.usuario_id }}) y <strong>todas sus inscripciones</strong> de la base de datos. 
+        Esta acción <strong>NO se puede deshacer</strong>.
+    </p>
+    <form method="post" action="/admin/eliminar_estudiante" 
+          onsubmit="return confirm(' ¿ESTÁS SEGURO?\n\nSe eliminará a {{ estudiante_seleccionado.nombre }} (ID: {{ estudiante_seleccionado.usuario_id }}) y todas sus inscripciones.\n\nEsta acción NO se puede deshacer.');">
+        <input type="hidden" name="usuario_id" value="{{ estudiante_seleccionado.usuario_id }}">
+        <button type="submit" class="btn-danger" style="padding: 12px 24px; font-size: 1rem;">
+            Eliminar Estudiante Permanentemente
+        </button>
+    </form>
+</div>
+
+<!-- Modal para actualizar inscripción -->
+<div id="modalActualizar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; padding:25px; margin:80px auto; max-width:500px; border-radius:12px;">
+        <h2 style="color:#667eea; margin-bottom:20px;">Actualizar Inscripción</h2>
+        <form method="post" action="/admin/actualizar_inscripcion">
+            <input type="hidden" name="usuario_id" value="{{ estudiante_seleccionado.usuario_id }}">
+            <input type="hidden" name="materia_id" id="upd_materia_id">
+            
+            <label>Día</label>
+            <select name="dia" id="upd_dia" required style="width:100%;">
+                <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+            </select>
+            
+            <label>Hora</label>
+            <input type="text" name="hora" id="upd_hora" required style="width:100%;">
+            
+            <label>Salón</label>
+            <input type="text" name="salon" id="upd_salon" required style="width:100%;">
+            
+            <label>Periodo</label>
+            <select name="periodo" id="upd_periodo" required style="width:100%;">
+                {% for p in todos_los_periodos %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn-success" style="flex:1;">Guardar</button>
+                <button type="button" onclick="cerrarModal()" class="btn" style="flex:1; background:#6b7280;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModalActualizar(grupo_id, periodo, dia, hora, salon) {
+    document.getElementById('upd_materia_id').value = grupo_id;
+    document.getElementById('upd_periodo').value = periodo;
+    document.getElementById('upd_dia').value = dia;
+    document.getElementById('upd_hora').value = hora;
+    document.getElementById('upd_salon').value = salon;
+    document.getElementById('modalActualizar').style.display = 'block';
+}
+function cerrarModal() {
+    document.getElementById('modalActualizar').style.display = 'none';
+}
+</script>
+{% endif %}
+
+{% else %}
+<!-- ================= VISTA ESTUDIANTE ================= -->
+<h1>Perfil del alumno</h1>
+<div class="card">
+    <h2>Información personal</h2>
+    <p><strong>Nombre:</strong> {{ usuario.nombre }}</p>
+    <p><strong>ID de usuario:</strong> <span class="badge badge-primary">{{ usuario.usuario_id }}</span></p>
+    {% if usuario.carrera %}<p><strong>Carrera:</strong> {{ usuario.carrera }}</p>{% endif %}
+    <p><strong>Email:</strong> {{ usuario.email }}</p>
+</div>
+
+<div class="grid" style="margin-top: 30px;">
+    <a class="tile" href="/planificacion">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"></div>
+        Planificación e inscripción
+    </a>
+    <a class="tile alt" href="/horario">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"></div>
+        Horario del alumno
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

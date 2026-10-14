@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+<h1> Panel de Administración</h1>
+<p style="font-size: 1.1rem; margin-bottom: 30px;">
+    Bienvenido, {{ usuario.nombre }} <span class="badge badge-warning">Administrador</span>
+</p>
+
+{% if msg %}<div class="msg {{ 'ok' if ok else 'err' }}">{{ msg }}</div>{% endif %}
+
+<!-- ============================================ -->
+<!-- GESTIÓN DE PERIODOS -->
+<!-- ============================================ -->
+<div class="card">
+    <h2>Gestión de Periodos</h2>
+    <p><strong>Periodo activo:</strong> <span class="badge badge-success">{{ periodo_activo }}</span></p>
+    
+    <h3 style="margin-top: 20px; color: #1e293b;">Periodos disponibles:</h3>
+    <table>
+        <thead>
+            <tr><th>Periodo</th><th>Estado</th><th>Acción</th></tr>
+        </thead>
+        <tbody>
+            {% for p in todos_los_periodos %}
+            <tr>
+                <td>{{ p }}</td>
+                <td>
+                    {% if p in periodos_habilitados %}
+                        <span style="color:green;">Habilitado</span>
+                    {% else %}
+                        <span style="color:red;">Inhabilitado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if p not in periodos_habilitados %}
+                    <form method="post" action="/admin/habilitar_periodo" style="display:inline;">
+                        <input type="hidden" name="periodo" value="{{ p }}">
+                        <button type="submit" class="btn-success" style="padding:5px 12px; font-size:0.85rem;">Habilitar</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="/admin/inhabilitar_periodo" style="display:inline;">
+                        <input type="hidden" name="periodo" value="{{ p }}">
+                        <button type="submit" class="btn-warning" style="padding:5px 12px; font-size:0.85rem;">Inhabilitar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h3 style="margin-top: 25px; color: #1e293b;">Agregar Nuevo Periodo</h3>
+    <form method="post" action="/admin/agregar_periodo" style="display: flex; gap: 15px; align-items: end;">
+        <div style="flex: 1;">
+            <label for="nuevo_periodo">Nuevo Periodo (ej: 2027-2)</label>
+            <input type="text" name="nuevo_periodo" id="nuevo_periodo" required 
+                   placeholder="2027-2" pattern="\d{4}-\d" style="width: 100%;">
+        </div>
+        <button type="submit" class="btn-success">Agregar Periodo</button>
+    </form>
+</div>
+
+<!-- ============================================ -->
+<!-- GESTIÓN DE MATERIAS (CON GRUPOS) -->
+<!-- ============================================ -->
+<div class="card">
+    <h2>Gestión de Materias</h2>
+    
+    <h3 style="margin-bottom: 15px; color: #1e293b;">Agregar Nuevo Grupo de Materia</h3>
+    <form method="post" action="/web/agregar_materia">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Nombre de la materia</label>
+                <input type="text" name="nombre" required placeholder="Ej: Bases de Datos">
+            </div>
+            <div>
+                <label>Carrera</label>
+                <select name="carrera" required>
+                    <option value="Ingeniería de Sistemas">Ing. Sistemas</option>
+                    <option value="Medicina">Medicina</option>
+                    <option value="Administración de Empresas">Admin. Empresas</option>
+                    <option value="Ingeniería Mecánica">Ing. Mecánica</option>
+                </select>
+            </div>
+            <div>
+                <label>Día</label>
+                <select name="dia" required>
+                    <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                    <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                    <option value="Viernes">Viernes</option>
+                </select>
+            </div>
+            <div>
+                <label>Hora</label>
+                <input type="text" name="hora" required placeholder="08:00 AM - 10:00 AM">
+            </div>
+            <div>
+                <label>Salón</label>
+                <input type="text" name="salon" required placeholder="A-301">
+            </div>
+        </div>
+        <button type="submit" class="btn-success" style="margin-top: 15px;">Agregar Grupo</button>
+    </form>
+    
+    <h3 style="margin-top: 30px; margin-bottom: 15px; color: #1e293b;">Grupos Existentes</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Grupo</th>
+                <th>ID Mat.</th>
+                <th>Nombre</th>
+                <th>Carrera</th>
+                <th>Día</th>
+                <th>Hora</th>
+                <th>Salón</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in materias %}
+            <tr>
+                <td><span class="badge badge-primary">G{{ m.grupo_id }}</span></td>
+                <td>{{ m.materia_id }}</td>
+                <td>{{ m.nombre }}</td>
+                <td>{{ m.carrera }}</td>
+                <td>{{ m.dia }}</td>
+                <td>{{ m.hora }}</td>
+                <td>{{ m.salon }}</td>
+                <td>
+                    <button onclick="abrirModalMateria('{{ m.grupo_id }}', '{{ m.nombre }}', '{{ m.carrera }}', '{{ m.dia }}', '{{ m.hora }}', '{{ m.salon }}')" 
+                            class="btn-warning" style="padding:5px 10px; font-size:0.8rem;"> </button>
+                    <form method="post" action="/web/eliminar_materia_catalogo" style="display:inline;">
+                        <input type="hidden" name="materia_id" value="{{ m.grupo_id }}">
+                        <button type="submit" class="btn-danger" style="padding:5px 10px; font-size:0.8rem;" 
+                                onclick="return confirm('¿Eliminar grupo G{{ m.grupo_id }} de {{ m.nombre }}?');"> </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL PARA ACTUALIZAR GRUPO -->
+<!-- ============================================ -->
+<div id="modalMateria" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; padding:25px; margin:80px auto; max-width:500px; border-radius:12px;">
+        <h2 style="color:#667eea; margin-bottom:20px;"> Actualizar Grupo</h2>
+        <form method="post" action="/web/actualizar_materia">
+            <input type="hidden" name="materia_id" id="m_id">
+            
+            <label>Nombre</label>
+            <input type="text" name="nombre" id="m_nombre" required style="width:100%;">
+            
+            <label>Carrera</label>
+            <select name="carrera" id="m_carrera" required style="width:100%;">
+                <option value="Ingeniería de Sistemas">Ing. Sistemas</option>
+                <option value="Medicina">Medicina</option>
+                <option value="Administración de Empresas">Admin. Empresas</option>
+                <option value="Ingeniería Mecánica">Ing. Mecánica</option>
+            </select>
+            
+            <label>Día</label>
+            <select name="dia" id="m_dia" required style="width:100%;">
+                <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+            </select>
+            
+            <label>Hora</label>
+            <input type="text" name="hora" id="m_hora" required style="width:100%;">
+            
+            <label>Salón</label>
+            <input type="text" name="salon" id="m_salon" required style="width:100%;">
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn-success" style="flex:1;"> Guardar</button>
+                <button type="button" onclick="cerrarModalMateria()" class="btn" style="flex:1; background:#6b7280;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModalMateria(id, nombre, carrera, dia, hora, salon) {
+    document.getElementById('m_id').value = id;
+    document.getElementById('m_nombre').value = nombre;
+    document.getElementById('m_carrera').value = carrera;
+    document.getElementById('m_dia').value = dia;
+    document.getElementById('m_hora').value = hora;
+    document.getElementById('m_salon').value = salon;
+    document.getElementById('modalMateria').style.display = 'block';
+}
+function cerrarModalMateria() {
+    document.getElementById('modalMateria').style.display = 'none';
+}
+</script>
+{% endblock %}

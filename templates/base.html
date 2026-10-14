@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StudyMatch{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        /* Barra de navegación */
+        .navbar {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-brand:hover { color: #f59e0b; }
+        
+        .navbar-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .navbar-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .navbar-links a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .navbar-links a.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .navbar-links a.admin-link {
+            background: #f59e0b;
+            color: #000;
+        }
+        
+        .navbar-links a.admin-link:hover {
+            background: #d97706;
+            color: #000;
+        }
+        
+        .navbar-links a.logout-link {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .navbar-links a.logout-link:hover {
+            background: #b91c1c;
+        }
+        
+        /* Contenido principal */
+        main {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Tarjetas */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-primary { background: #e0e7ff; color: #3730a3; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        
+        /* Mensajes */
+        .msg {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .msg.ok { background: #dcfce7; color: #166534; border-left: 4px solid #10b981; }
+        .msg.err { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+        
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover { background: #f8fafc; }
+        
+        /* Botones */
+        button, .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        button:hover, .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        
+        .btn-warning { background: #f59e0b; color: #000; }
+        .btn-warning:hover { background: #d97706; }
+        
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        
+        /* Formularios */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        form .form-group { margin-bottom: 15px; }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Tiles */
+        .tile {
+            display: block;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .tile.alt {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        h1 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        p { color: #475569; margin-bottom: 10px; }
+        
+        a { color: #667eea; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    {% if usuario %}
+    <nav class="navbar">
+        <a href="/tablero" class="navbar-brand">StudyMatch</a>
+        <div class="navbar-links">
+            <a href="/tablero">Tablero</a>
+            <a href="/perfil">Perfil</a>
+            {% if usuario.rol != 'admin' %}
+            <a href="/planificacion">Planificación</a>
+            <a href="/catalogo">Catálogo</a>
+            {% endif %}
+            <a href="/horario">Horario</a>
+            {% if usuario.rol == 'admin' %}
+            <a href="/admin" class="admin-link">Admin</a>
+            {% endif %}
+            <a href="/pruebas">Pruebas</a>
+            <a href="/salir" class="logout-link">Salir ({{ usuario.nombre }})</a>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

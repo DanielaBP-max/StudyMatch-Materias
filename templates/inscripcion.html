@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<h1> Inscripción de materias</h1>
+<p style="font-size: 1.1rem; margin-bottom: 20px;">
+    {{ usuario.nombre }} 
+    <span class="badge {% if usuario.rol == 'admin' %}badge-warning{% else %}badge-primary{% endif %}">
+        {{ usuario.rol | upper }}
+    </span>
+    <span class="badge badge-primary">usuario_id {{ usuario.usuario_id }}</span>
+</p>
+
+{% if msg %}<div class="msg {{ 'ok' if ok else 'err' }}">{{ msg }}</div>{% endif %}
+
+<div class="card">
+    <form method="post" action="/web/inscripcion">
+        
+        {% if usuario.rol == 'admin' %}
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 10px; border: 2px solid #f59e0b; margin-bottom: 25px;">
+            <h3 style="color: #92400e; margin-bottom: 15px;">👥 Seleccionar Estudiante</h3>
+            <label for="usuario_destino">¿A qué estudiante deseas inscribir?</label>
+            <select name="usuario_destino" id="usuario_destino" required style="width: 100%;">
+                <option value="">-- Selecciona un estudiante --</option>
+                {% for e in estudiantes %}
+                <option value="{{ e.usuario_id }}">{{ e.nombre }} (ID: {{ e.usuario_id }}) - {{ e.carrera }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <label>1. Seleccionar periodo</label>
+        <select name="periodo" required>
+            {% for p in periodos %}
+                <option value="{{ p }}" {{ 'selected' if p == periodo_activo }}>{{ p }}</option>
+            {% endfor %}
+        </select>
+
+        <label>2. Seleccionar grupo (materia + horario + salón)</label>
+        <select name="grupo_id" id="selGrupo" onchange="fillInfo()" required>
+            <option value="">-- Selecciona un grupo --</option>
+            {% for m in catalogo %}
+                <option value="{{ m.grupo_id }}" data-nombre="{{ m.nombre }}" data-dia="{{ m.dia }}" data-hora="{{ m.hora }}" data-salon="{{ m.salon }}">
+                    G{{ m.grupo_id }} — {{ m.nombre }} ({{ m.dia }} {{ m.hora }} - {{ m.salon }})
+                </option>
+            {% endfor %}
+        </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div>
+                <label>Materia</label>
+                <input id="txtNombre" readonly style="background: #f8fafc;">
+            </div>
+            <div>
+                <label>Día y Hora</label>
+                <input id="txtHorario" readonly style="background: #f8fafc;">
+            </div>
+            <div>
+                <label>Salón</label>
+                <input id="txtSalon" readonly style="background: #f8fafc;">
+            </div>
+        </div>
+
+        <button type="submit" class="btn-success" style="width: 100%; padding: 14px; font-size: 1.05rem; margin-top: 20px;">
+            {% if usuario.rol == 'admin' %} Inscribir grupo al estudiante{% else %} Inscribirme en este grupo{% endif %}
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Referencia rápida del catálogo</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Grupo</th>
+                <th>ID Mat.</th>
+                <th>Nombre</th>
+                <th>Carrera</th>
+                <th>Día</th>
+                <th>Hora</th>
+                <th>Salón</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in catalogo %}
+            <tr>
+                <td><span class="badge badge-primary">G{{ m.grupo_id }}</span></td>
+                <td>{{ m.materia_id }}</td>
+                <td>{{ m.nombre }}</td>
+                <td>{{ m.carrera }}</td>
+                <td>{{ m.dia }}</td>
+                <td>{{ m.hora }}</td>
+                <td>{{ m.salon }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function fillInfo(){
+    const sel = document.getElementById('selGrupo');
+    const opt = sel.options[sel.selectedIndex];
+    if (opt && opt.value) {
+        document.getElementById('txtNombre').value = opt.dataset.nombre;
+        document.getElementById('txtHorario').value = opt.dataset.dia + ' ' + opt.dataset.hora;
+        document.getElementById('txtSalon').value = opt.dataset.salon;
+    } else {
+        document.getElementById('txtNombre').value = '';
+        document.getElementById('txtHorario').value = '';
+        document.getElementById('txtSalon').value = '';
+    }
+}
+const qp = new URLSearchParams(location.search).get('grupo_id');
+if (qp) { document.getElementById('selGrupo').value = qp; fillInfo(); }
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Planificación e inscripción</h1>
+<p>{{ usuario.nombre }} <span class="badge badge-primary">usuario_id {{ usuario.usuario_id }}</span></p>
+<div class="grid" style="margin-top: 30px;">
+    <a class="tile" href="/catalogo"> Examinar catálogo de cursos</a>
+    <a class="tile alt" href="/inscripcion"> Inscribirse a clases</a>
+</div>
+{% endblock %}

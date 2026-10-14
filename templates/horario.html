@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+<h1> {% if usuario.rol == 'admin' %}Gestión de Horarios{% else %}Horario del alumno{% endif %}</h1>
+<p style="font-size: 1.1rem; margin-bottom: 20px;">
+    {{ usuario.nombre }} 
+    {% if usuario.rol == 'admin' %}<span class="badge badge-warning">Administrador</span>
+    {% else %}<span class="badge badge-primary">usuario_id {{ usuario.usuario_id }}</span>{% endif %}
+    · Periodo: <span class="badge badge-success">{{ periodo }}</span>
+</p>
+
+{% if ok %}<div class="msg ok"> {{ ok }}</div>{% endif %}
+{% if error %}<div class="msg err"> {{ error }}</div>{% endif %}
+
+<!-- Selector de periodo -->
+<div class="card" style="margin-bottom: 30px;">
+    <h2> Filtrar por Periodo</h2>
+    <form method="get" action="/horario" style="display: flex; gap: 15px; align-items: end;">
+        <div style="flex: 1;">
+            <label for="periodo">Seleccionar Periodo</label>
+            <select name="periodo" id="periodo" required style="width: 100%;" onchange="this.form.submit()">
+                {% for p in todos_los_periodos %}
+                <option value="{{ p }}" {{ 'selected' if p == periodo }}>
+                    {{ p }} {% if p not in periodos_habilitados %}(No habilitado){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn">Ver Horario</button>
+    </form>
+</div>
+
+{% if clases %}
+<div class="card">
+    <h2>{% if usuario.rol == 'admin' %} Horarios de Todos los Estudiantes{% else %} Clases inscritas{% endif %}</h2>
+    <table>
+        <thead>
+            <tr>
+                {% if usuario.rol == 'admin' %}<th>ID Est.</th><th>Estudiante</th>{% endif %}
+                <th>ID Materia</th><th>Materia</th><th>Carrera</th>
+                <th>Día</th><th>Hora</th><th>Salón</th><th>Periodo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in clases %}
+            <tr>
+                {% if usuario.rol == 'admin' %}
+                <td>{{ c.usuario_id }}</td>
+                <td><strong>{{ c.estudiante_nombre }}</strong></td>
+                {% endif %}
+                <td>{{ c.materia_id }}</td>
+                <td>{{ c.nombre }}</td>
+                <td>{{ c.carrera }}</td>
+                <td>{{ c.dia }}</td>
+                <td>{{ c.hora }}</td>
+                <td>{{ c.salon }}</td>
+                <td><span class="badge badge-success">{{ c.periodo }}</span></td>
+                <td>
+                    {% if usuario.rol == 'admin' %}
+                    <button onclick="abrirModalHorario('{{ c.usuario_id }}', '{{ c.materia_id }}', '{{ c.periodo }}', '{{ c.dia }}', '{{ c.hora }}', '{{ c.salon }}')" 
+                            class="btn-warning" style="padding:5px 10px; font-size:0.8rem;"></button>
+                    <form method="post" action="/admin/eliminar_inscripcion" style="display:inline;">
+                        <input type="hidden" name="usuario_id" value="{{ c.usuario_id }}">
+                        <input type="hidden" name="materia_id" value="{{ c.materia_id }}">
+                        <button type="submit" class="btn-danger" style="padding:5px 10px; font-size:0.8rem;" 
+                                onclick="return confirm('¿Eliminar inscripción de {{ c.estudiante_nombre }}?');">️</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="/web/eliminar_materia" style="display:inline;">
+                        <input type="hidden" name="materia_id" value="{{ c.materia_id }}">
+                        <button type="submit" class="btn-danger" style="padding:5px 10px; font-size:0.8rem;" 
+                                onclick="return confirm('¿Desinscribirse de {{ c.nombre }}?');"> Eliminar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para actualizar desde horario -->
+{% if usuario.rol == 'admin' %}
+<div id="modalHorario" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; padding:25px; margin:80px auto; max-width:500px; border-radius:12px;">
+        <h2 style="color:#667eea; margin-bottom:20px;">✏️ Actualizar Inscripción</h2>
+        <form method="post" action="/admin/actualizar_inscripcion">
+            <input type="hidden" name="usuario_id" id="h_usuario_id">
+            <input type="hidden" name="materia_id" id="h_materia_id">
+            
+            <label>Día</label>
+            <select name="dia" id="h_dia" required style="width:100%;">
+                <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+            </select>
+            
+            <label>Hora</label>
+            <input type="text" name="hora" id="h_hora" required style="width:100%;">
+            
+            <label>Salón</label>
+            <input type="text" name="salon" id="h_salon" required style="width:100%;">
+            
+            <label>Periodo</label>
+            <select name="periodo" id="h_periodo" required style="width:100%;">
+                {% for p in todos_los_periodos %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn-success" style="flex:1;">💾 Guardar</button>
+                <button type="button" onclick="cerrarModalHorario()" class="btn" style="flex:1; background:#6b7280;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModalHorario(usuario_id, materia_id, periodo, dia, hora, salon) {
+    document.getElementById('h_usuario_id').value = usuario_id;
+    document.getElementById('h_materia_id').value = materia_id;
+    document.getElementById('h_periodo').value = periodo;
+    document.getElementById('h_dia').value = dia;
+    document.getElementById('h_hora').value = hora;
+    document.getElementById('h_salon').value = salon;
+    document.getElementById('modalHorario').style.display = 'block';
+}
+function cerrarModalHorario() {
+    document.getElementById('modalHorario').style.display = 'none';
+}
+</script>
+{% endif %}
+
+{% else %}
+<div class="msg err">No hay materias inscritas en este periodo.</div>
+{% endif %}
+{% endblock %}

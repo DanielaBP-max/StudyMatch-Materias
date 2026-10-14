@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Tablero - StudyMatch{% endblock %}
+{% block content %}
+<div style="text-align: center; padding: 20px 0;">
+    <h1 style="color: #1e293b; margin-bottom: 10px;"> Tablero de Servicios</h1>
+    <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 40px;">
+        Bienvenido(a), <strong>{{ usuario.nombre }}</strong>
+        <span class="badge badge-primary">ID: {{ usuario.usuario_id }}</span>
+        {% if usuario.rol == 'admin' %}
+        <span class="badge badge-warning">  Administrador</span>
+        {% endif %}
+    </p>
+</div>
+
+<div class="grid">
+    <a class="tile" href="/perfil">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"> </div>
+        Perfil del alumno
+    </a>
+    
+    {% if usuario.rol != 'admin' %}
+    <a class="tile alt" href="/planificacion">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"> </div>
+        Planificación e inscripción
+    </a>
+    <a class="tile" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" href="/catalogo">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"></div>
+        Catálogo de cursos
+    </a>
+    {% endif %}
+    
+    <a class="tile alt" href="/horario">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"> </div>
+        Horario del alumno
+    </a>
+    
+    {% if usuario.rol == 'admin' %}
+    <a class="tile" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" href="/admin">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"> </div>
+        Panel de Administración
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
